@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Video Feed</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        #video-feed {
+            position: absolute;
+            top:10px;
+            left:10px;
+            border: 2px solid black;
+            width: 95vw;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- <h1>Real-Time Video Feed</h1> -->
+    <img id="video-feed" alt="Video stream not available" />
+
+    <script>
+        // Connect to the WebSocket server
+        const socket = new WebSocket('ws://127.0.0.1:8000/ws/test');
+        socket.onopen = () => {
+            console.log('WebSocket connection established');
+        };
+
+        // Get the image element where we will display the video frames
+        const videoFeed = document.getElementById('video-feed');
+
+        // When the WebSocket connection opens, log a message
+        
+
+        // When binary data (JPEG image) is received from the server
+        socket.onmessage = (event) => {
+            const blob = new Blob([event.data], { type: 'image/jpeg' });
+            const url = URL.createObjectURL(blob);
+            
+            // Set the image source to the received blob URL to display the frame
+            videoFeed.src = url;
+
+            // Revoke the URL to avoid memory leaks
+            videoFeed.onload = () => {
+                URL.revokeObjectURL(url);
+            };
+        };
+
+        // Handle WebSocket errors
+        socket.onerror = (error) => {
+            console.error('WebSocket error:', error);
+        };
+
+        // Log when WebSocket connection is closed
+        socket.onclose = () => {
+            console.log('WebSocket connection closed');
+        };
+    </script>
+
+</body>
+</html>
