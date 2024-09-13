@@ -3,66 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebSocket Video Feed</title>
+    <title>WebSocket Camera Feed</title>
     <style>
-        body {
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            background-color: #f0f0f0;
+            background-color: #000; /* Black background for better video visibility */
         }
-        #video-feed {
-            position: absolute;
-            top:10px;
-            left:10px;
-            border: 2px solid black;
-            width: 95vw;
+        #container {
+            position: relative;
+            width: 100%;
+            max-width: 100%; /* Limit the max size of the video */
             height: auto;
+            margin: auto;
+        }
+        #video {
+            width: 100%;
+            height: auto;
+        }
+        #overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 1vh 2vw; /* Adaptive padding based on viewport */
+            color: white;
+            background-color: rgba(0, 0, 0, 0.5);
+            text-align: center;
+            font-size: 2.5vw; /* Adaptive font-size based on viewport */
+            z-index: 10; /* Ensures it stays on top */
+            box-sizing: border-box;
+        }
+        /* Make text larger on larger screens */
+        @media (min-width: 768px) {
+            #overlay {
+                font-size: 2vw;
+                padding: 2vh 2vw;
+            }
+        }
+        /* On very small screens, reduce font-size */
+        @media (max-width: 480px) {
+            #overlay {
+                font-size: 4vw;
+                padding: 1.5vh 2vw;
+            }
         }
     </style>
 </head>
 <body>
 
-    <!-- <h1>Real-Time Video Feed</h1> -->
-    <img id="video-feed" alt="Video stream not available" />
+    <div id="container">
+        <video id="video" autoplay></video>
+        <div id="overlay">Waiting for server response...</div>
+    </div>
+    <canvas id="canvas" style="display: none;"></canvas>
+
+    <!-- <img id="server-image" alt="Server response not available" /> -->
 
     <script>
-        // Connect to the WebSocket server
-        const socket = new WebSocket('ws://127.0.0.1:8000/ws/test');
+        // Get access to the camera
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
+        const serverImage = document.getElementById('server-image');
+
+        // WebSocket connection
+        const socket = new WebSocket('ws://0.0.0.0:8000/ws/video');
+
         socket.onopen = () => {
             console.log('WebSocket connection established');
         };
 
-        // Get the image element where we will display the video frames
-        const videoFeed = document.getElementById('video-feed');
-
-        // When the WebSocket connection opens, log a message
-        
-
-        // When binary data (JPEG image) is received from the server
-        socket.onmessage = (event) => {
-            const blob = new Blob([event.data], { type: 'image/jpeg' });
-            const url = URL.createObjectURL(blob);
-            
-            // Set the image source to the received blob URL to display the frame
-            videoFeed.src = url;
-
-            // Revoke the URL to avoid memory leaks
-            videoFeed.onload = () => {
-                URL.revokeObjectURL(url);
-            };
-        };
-
-        // Handle WebSocket errors
         socket.onerror = (error) => {
             console.error('WebSocket error:', error);
         };
 
-        // Log when WebSocket connection is closed
         socket.onclose = () => {
             console.log('WebSocket connection closed');
         };
+        count = 0
+
+        // Handle incoming WebSocket messages
+        socket.onmessage = (event) => {
+
+            const response = JSON.parse(event.data);
+            // overlay.textContent = `Server Response: ${event.data}`;
+            // overlay.textContent = `Face Spoof: ${response["Face Spoof"]} <br>Object Spoof: ${response["Object Spoof"]} <br>Detection: ${response["Detection"]}`;
+            const text = `Face Detection: <span style="color: ${response["face_detection_c"]};">${response["face_detection"]}</span>
+                        <br>Object Detection: <span style="color: ${response["object_detected_c"]};">${response["object_detected"]}</span>
+                        <br>Object Spoof: <span style="color: ${response["object_antispoof_c"]};">${response["object_antispoof"]}</span>
+                        <br>Face Anti-Spoof: <span style="color: ${response["face_antispoof_c"]};">${response["face_antispoof"]}</span>
+                        `;
+            // responses = {"face_detection":"",
+            //             "face_antispoof":"",
+            //             "face_antispoof_c":"",
+            //             "object_detected":"",
+            //             "object_detected_c":"",
+            //             "object_antispoof":"",
+            //             "object_antispoof_c":"",}
+            overlay.innerHTML = text;
+            
+        };
+
+        // Get user media (camera feed)
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+                video.play();
+                
+                
+                
+                // Send video frames periodically
+                setInterval(() => {
+                    // Draw video frame to canvas
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                    // Convert canvas to data URL (JPEG)
+                    canvas.toBlob((blob) => {
+                        if (blob && blob.size > 0) {
+                            // Send the JPEG blob to the server via WebSocket
+                            repsonse  = socket.send(blob);
+                            console.log(repsonse)
+                        }
+                        else{
+                            console.log(blob)
+                        }
+                    }, 'image/jpeg', 0.8); // 0.8 for compression quality
+                }, 500); // Adjust this interval for the frame rate
+            })
+            .catch(error => {
+                console.error('Error accessing camera:', error);
+            });
     </script>
 
 </body>

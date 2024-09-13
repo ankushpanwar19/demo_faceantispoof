@@ -18,22 +18,22 @@ def multimodal_antispoof(rgb_frame,face_bbox):
 
     image_height, image_width, _ = rgb_frame.shape
     bbox_x,bbox_y,bbox_width,bbox_height = face_bbox
-    responses = []
-    responses_color = []
     color_code = {"Green":(0, 255, 0), "Red":(0,0,255)}
+    responses = {}
     if FACE_ANTISPOOF:
         res = predict_facespoof(rgb_frame,face_bbox)
         res = round(res,2)
         out = "Real" if res>0.6 else "Spoof"
-        color = "Green" if out=='Real' else "Red"
-        responses.append(f"Face Antispoof:{out}({res})")
-        responses_color.append(color_code[color])
+        color = "green" if out=='Real' else "red"
+        output = out + f" {str(res)}"
+        responses["face_antispoof"]=output
+        responses["face_antispoof_c"]=color
     
     if OBJECT_DETECTION:
         obj_spoof = "Real"
         obj_detected, obj_bbox = run_detector(rgb_frame)
-        responses.append(f"Object Detected:{obj_detected}")
-        responses_color.append(color_code["Green"])
+        responses["object_detected"]=obj_detected
+        responses["object_detected_c"]='green'
         for i, obj in enumerate(obj_detected):
             if obj in ['laptop','tv','cellphone','book','remote']:
                 ymin,xmin,ymax,xmax = obj_bbox[i]
@@ -47,13 +47,13 @@ def multimodal_antispoof(rgb_frame,face_bbox):
                     break
                 
         out = obj_spoof
-        color = "Green" if out=='Real' else "Red"
-        responses.append(f"Object Antispoof:{out}")
-        responses_color.append(color_code[color])
+        color = "green" if out=='Real' else "red"
+        responses["object_antispoof"]= out
+        responses["object_antispoof_c"]=color
     
     
 
-    return responses, responses_color
+    return responses
 
 
 def movement(rgb_frame,blink_count,mouth_count,prev_eyes,prev_mouth):
