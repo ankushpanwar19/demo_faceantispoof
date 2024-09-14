@@ -8,7 +8,7 @@ from PIL import Image
 import io
 from pathlib import Path
 import numpy as np
-from test import multimodal_antispoof
+from test import multimodal_antispoof, movement
 from src.face_detection import detect_face
 
 app = FastAPI()
@@ -27,6 +27,11 @@ app.add_middleware(
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     frame_count = 0
+
+    blink_count = 0
+    prev_eyes = ''
+    mouth_count = 0
+    prev_mouth = ''
     try:
         while True:
             # Receive video frame from the client
@@ -52,12 +57,16 @@ async def websocket_endpoint(websocket: WebSocket):
                         "object_detected":"",
                         "object_detected_c":"",
                         "object_antispoof":"",
-                        "object_antispoof_c":"",}
+                        "object_antispoof_c":"",
+                        "eyes_movement":"",
+                        "mouth_movement":""}
             # try:
             if no_of_faces == 'single_face':
                 responses = multimodal_antispoof(image_from_array,face_box)
                 responses["face_detection"] = "Single Face"
                 responses["face_detection_c"] = "green"
+
+                responses,blink_count,mouth_count,prev_eyes,prev_mouth = movement(responses,image_from_array,blink_count,mouth_count,prev_eyes,prev_mouth)
             elif no_of_faces == 'no_face':
                 responses["face_detection"] = "No Face detected"
                 responses["face_detection_c"] = "red"

@@ -56,23 +56,18 @@ def multimodal_antispoof(rgb_frame,face_bbox):
     return responses
 
 
-def movement(rgb_frame,blink_count,mouth_count,prev_eyes,prev_mouth):
-    responses = []
-    responses_color = []
-    color_code = {"Green":(0, 255, 0), "Red":(0,0,255)}
-    if FACE_MOVEMENT:
-        landmarks = detect_landmarks(rgb_frame)
-        blink_count, prev_eyes = eye_blink(landmarks,blink_count,prev_eyes)
-        mouth_count, prev_mouth = mouth_movement(landmarks,mouth_count,prev_mouth)
+def movement(responses,rgb_frame,blink_count,mouth_count,prev_eyes,prev_mouth):
 
-        # print(blink_count, prev_eyes)
-        color = "Green"
-        responses.append(f"Eye Blink:{blink_count}")
-        responses_color.append(color_code[color])
-        responses.append(f"Mouth Open:{mouth_count}")
-        responses_color.append(color_code[color])
+    landmarks = detect_landmarks(rgb_frame)
+    blink_count, prev_eyes = eye_blink(landmarks,blink_count,prev_eyes)
+    mouth_count, prev_mouth = mouth_movement(landmarks,mouth_count,prev_mouth)
+
+    # print(blink_count, prev_eyes)
+    color = "Green"
+    responses["eyes_movement"]= blink_count
+    responses["mouth_movement"]= mouth_count
     
-    return responses, responses_color,blink_count,mouth_count,prev_eyes,prev_mouth
+    return responses,blink_count,mouth_count,prev_eyes,prev_mouth
 
 
 

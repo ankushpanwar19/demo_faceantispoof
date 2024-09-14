@@ -33,7 +33,7 @@ def eye_blink(landmarks, blink_count=0, prev_eyes=''):
         elif prev_eyes == 'closed':
             blink_count +=1
             prev_eyes = 'opened'
-    print(blink_count)                        
+    # print(blink_count)                        
     return blink_count, prev_eyes
 
 def mouth_movement(landmarks, mouth_count=0, prev_mouth=''):

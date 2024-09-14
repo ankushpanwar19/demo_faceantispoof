@@ -57,7 +57,7 @@
 <body>
 
     <div id="container">
-        <video id="video" autoplay></video>
+        <video id="video" autoplay playsinline></video>
         <div id="overlay">Waiting for server response...</div>
     </div>
     <canvas id="canvas" style="display: none;"></canvas>
@@ -72,7 +72,8 @@
         const serverImage = document.getElementById('server-image');
 
         // WebSocket connection
-        const socket = new WebSocket('ws://0.0.0.0:8000/ws/video');
+        // const socket = new WebSocket('ws://0.0.0.0:8000/ws/video');
+        const socket = new WebSocket('wss://face-antispoof.privately.swiss:8000/ws/video');
 
         socket.onopen = () => {
             console.log('WebSocket connection established');
@@ -97,14 +98,9 @@
                         <br>Object Detection: <span style="color: ${response["object_detected_c"]};">${response["object_detected"]}</span>
                         <br>Object Spoof: <span style="color: ${response["object_antispoof_c"]};">${response["object_antispoof"]}</span>
                         <br>Face Anti-Spoof: <span style="color: ${response["face_antispoof_c"]};">${response["face_antispoof"]}</span>
+                        <br>Eyes Blink: <span style="color: ${response["face_antispoof_c"]};">${response["eyes_movement"]}</span>
+                        <br>Mouth Movement: <span style="color: ${response["face_antispoof_c"]};">${response["mouth_movement"]}</span>
                         `;
-            // responses = {"face_detection":"",
-            //             "face_antispoof":"",
-            //             "face_antispoof_c":"",
-            //             "object_detected":"",
-            //             "object_detected_c":"",
-            //             "object_antispoof":"",
-            //             "object_antispoof_c":"",}
             overlay.innerHTML = text;
             
         };
@@ -135,7 +131,7 @@
                             console.log(blob)
                         }
                     }, 'image/jpeg', 0.8); // 0.8 for compression quality
-                }, 500); // Adjust this interval for the frame rate
+                }, 200); // Adjust this interval for the frame rate
             })
             .catch(error => {
                 console.error('Error accessing camera:', error);
