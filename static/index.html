@@ -34,21 +34,21 @@
             color: white;
             background-color: rgba(0, 0, 0, 0.5);
             text-align: center;
-            font-size: 2.5vw; /* Adaptive font-size based on viewport */
+            font-size: 1vw; /* Adaptive font-size based on viewport */
             z-index: 10; /* Ensures it stays on top */
             box-sizing: border-box;
         }
         /* Make text larger on larger screens */
         @media (min-width: 768px) {
             #overlay {
-                font-size: 2vw;
+                font-size: 1vw;
                 padding: 2vh 2vw;
             }
         }
         /* On very small screens, reduce font-size */
         @media (max-width: 480px) {
             #overlay {
-                font-size: 4vw;
+                font-size: 1vw;
                 padding: 1.5vh 2vw;
             }
         }
@@ -96,11 +96,12 @@
             // overlay.textContent = `Face Spoof: ${response["Face Spoof"]} <br>Object Spoof: ${response["Object Spoof"]} <br>Detection: ${response["Detection"]}`;
             const text = `Face Detection: <span style="color: ${response["face_detection_c"]};">${response["face_detection"]}</span>
                         <br>Object Detection: <span style="color: ${response["object_detected_c"]};">${response["object_detected"]}</span>
+                        <br>Eyes Blink: <span style="color: white};">${response["eyes_movement"]}</span>
+                        <br>Mouth Movement: <span style="color: white};">${response["mouth_movement"]}</span>
                         <br>Object Spoof: <span style="color: ${response["object_antispoof_c"]};">${response["object_antispoof"]}</span>
                         <br>Face Anti-Spoof: <span style="color: ${response["face_antispoof_c"]};">${response["face_antispoof"]}</span>
-                        <br>Eyes Blink: <span style="color: ${response["face_antispoof_c"]};">${response["eyes_movement"]}</span>
-                        <br>Mouth Movement: <span style="color: ${response["face_antispoof_c"]};">${response["mouth_movement"]}</span>
                         `;
+                        
             overlay.innerHTML = text;
             
         };
@@ -131,7 +132,7 @@
                             console.log(blob)
                         }
                     }, 'image/jpeg', 0.8); // 0.8 for compression quality
-                }, 200); // Adjust this interval for the frame rate
+                }, 400); // Adjust this interval for the frame rate
             })
             .catch(error => {
                 console.error('Error accessing camera:', error);
