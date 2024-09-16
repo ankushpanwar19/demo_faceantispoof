@@ -62,11 +62,14 @@ async def websocket_endpoint(websocket: WebSocket):
                         "mouth_movement":""}
             # try:
             if no_of_faces == 'single_face':
+                responses = multimodal_antispoof(image_from_array,face_box)
+                responses["face_detection"] = "Single Face"
+                responses["face_detection_c"] = "green"
                 try:
                     responses,blink_count,mouth_count,prev_eyes,prev_mouth = movement(responses,image_from_array,blink_count,mouth_count,prev_eyes,prev_mouth)
-                except: 
-                    responses["eyes_movement"] = "Landmark Model failed"
-                    responses["mouth_movement"] = "Landmark Model failed"
+                except:
+                    responses["eyes_movement"] = "Landmark model failed"
+                    responses["mouth_movement"] = "Landmark model failed"
             elif no_of_faces == 'no_face':
                 responses["face_detection"] = "No Face detected"
                 responses["face_detection_c"] = "red"
