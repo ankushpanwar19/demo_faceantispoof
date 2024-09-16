@@ -85,6 +85,8 @@
 
         socket.onclose = () => {
             console.log('WebSocket connection closed');
+            const text = `Web Socket Connection is closed`;
+            overlay.innerHTML = text;
         };
         count = 0
 
@@ -128,9 +130,7 @@
                             repsonse  = socket.send(blob);
                             console.log(repsonse)
                         }
-                        else{
-                            console.log(blob)
-                        }
+                        
                     }, 'image/jpeg', 0.8); // 0.8 for compression quality
                 }, 400); // Adjust this interval for the frame rate
             })
