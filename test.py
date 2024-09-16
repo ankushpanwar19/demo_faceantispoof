@@ -23,7 +23,7 @@ def multimodal_antispoof(rgb_frame,face_bbox):
     if FACE_ANTISPOOF:
         res = predict_facespoof(rgb_frame,face_bbox)
         res = round(res,2)
-        out = "Real" if res>0.6 else "Spoof"
+        out = "Real" if res>0.5 else "Spoof"
         color = "green" if out=='Real' else "red"
         output = out + f" {str(res)}"
         responses["face_antispoof"]=output
