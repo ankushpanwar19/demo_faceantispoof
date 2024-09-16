@@ -73,9 +73,17 @@ async def websocket_endpoint(websocket: WebSocket):
             elif no_of_faces == 'no_face':
                 responses["face_detection"] = "No Face detected"
                 responses["face_detection_c"] = "red"
+                blink_count = 0
+                prev_eyes = ''
+                mouth_count = 0
+                prev_mouth = ''
             else :
                 responses["face_detection"] = "Multiple Face detected"
                 responses["face_detection_c"] = "red"
+                blink_count = 0
+                prev_eyes = ''
+                mouth_count = 0
+                prev_mouth = ''
             # except:
             #     print("Prediction Error")
 
