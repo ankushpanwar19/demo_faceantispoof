@@ -128,7 +128,7 @@
                         if (blob && blob.size > 0) {
                             // Send the JPEG blob to the server via WebSocket
                             repsonse  = socket.send(blob);
-                            console.log(repsonse)
+                            // console.log(repsonse.data)
                         }
                         
                     }, 'image/jpeg', 0.8); // 0.8 for compression quality
