@@ -1,4 +1,5 @@
 import os
+import base64
 import json
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
@@ -8,7 +9,7 @@ from PIL import Image
 import io
 from pathlib import Path
 import numpy as np
-from test import multimodal_antispoof, movement
+from test import multimodal_antispoof, movement, face_oval
 from src.face_detection import detect_face
 
 app = FastAPI()
@@ -36,7 +37,20 @@ async def websocket_endpoint(websocket: WebSocket):
         while True:
             # Receive video frame from the client
             # print("Received")
-            frame = await websocket.receive_bytes()
+            # frame = await websocket.receive_bytes()
+
+            # print("yessss")
+            data = await websocket.receive_text()
+            json_data = json.loads(data)
+
+            # Extract the image and array from the received JSON
+            image_base64 = json_data['image']
+            ovalCoords = json_data['ovalCoords']
+            ovalCoords = list(ovalCoords)
+            ovalCoords = [ float(num.split('p')[0]) for num in ovalCoords]
+
+            # Decode the Base64 image
+            frame = base64.b64decode(image_base64.split(',')[1])  
             # print(type(frame))
             if len(frame) == 0:
                 print("Received empty data, skipping...")
@@ -59,17 +73,26 @@ async def websocket_endpoint(websocket: WebSocket):
                         "object_antispoof":"",
                         "object_antispoof_c":"",
                         "eyes_movement":"",
-                        "mouth_movement":""}
+                        "mouth_movement":"",
+                        "oval_alignment":False}
             # try:
             if no_of_faces == 'single_face':
-                responses = multimodal_antispoof(image_from_array,face_box)
-                responses["face_detection"] = "Single Face"
-                responses["face_detection_c"] = "green"
-                try:
-                    responses,blink_count,mouth_count,prev_eyes,prev_mouth = movement(responses,image_from_array,blink_count,mouth_count,prev_eyes,prev_mouth)
-                except:
-                    responses["eyes_movement"] = "Landmark model failed"
-                    responses["mouth_movement"] = "Landmark model failed"
+                if face_oval(image_from_array,ovalCoords):
+                    # print("yess")
+                    responses = multimodal_antispoof(image_from_array,face_box)
+                    responses["face_detection"] = "Single Face"
+                    responses["face_detection_c"] = "green"
+                    responses["oval_alignment"] = True
+                    try:
+                        responses,blink_count,mouth_count,prev_eyes,prev_mouth = movement(responses,image_from_array,blink_count,mouth_count,prev_eyes,prev_mouth)
+                    except:
+                        print("ERROR")
+                        responses["eyes_movement"] = "Landmark model failed"
+                        responses["mouth_movement"] = "Landmark model failed"
+                else:
+                    responses["face_detection"] = "Place your face in the oval"
+                    responses["oval_alignment"] = False
+
             elif no_of_faces == 'no_face':
                 responses["face_detection"] = "No Face detected"
                 responses["face_detection_c"] = "red"
@@ -89,6 +112,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
             # response = { "Face Spoof": "Real","Object Spoof": "Fake", "Detection": "True"}
             # Echo the frame back to the client (for display, if needed)
+            # print(responses)
             await websocket.send_bytes(json.dumps(responses))
     except WebSocketDisconnect:
         print("Client disconnected")

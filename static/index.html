@@ -24,6 +24,7 @@
         #video {
             width: 100%;
             height: auto;
+            transform: scaleX(-1);
         }
         #overlay {
             position: absolute;
@@ -52,6 +53,18 @@
                 padding: 1.5vh 2vw;
             }
         }
+        #ovalSvg {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            /*background: rgba(0, 0, 0, 0.6); /* Darkens the outside */
+            /*backdrop-filter: blur(5px); /* Blurs the outside */
+            z-index: 2;
+        }
+
     </style>
 </head>
 <body>
@@ -59,6 +72,10 @@
     <div id="container">
         <video id="video" autoplay playsinline></video>
         <div id="overlay">Waiting for server response...</div>
+        <svg id="ovalSvg" xmlns="http://www.w3.org/2000/svg">
+            <ellipse id='ovalEllipse' cx="140" cy="80" rx="50" ry="100" style="fill-opacity:0 ;stroke:white;stroke-width:5" />
+            Sorry, your browser does not support inline SVG.  
+         </svg>
     </div>
     <canvas id="canvas" style="display: none;"></canvas>
 
@@ -68,12 +85,19 @@
         // Get access to the camera
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
+        const ovalSvg = document.getElementById('ovalSvg');
+        const ovalEllipse = document.getElementById('ovalEllipse');
         const context = canvas.getContext('2d');
         const serverImage = document.getElementById('server-image');
 
+        var cx = ovalEllipse.getAttribute('cx');
+        var cy = ovalEllipse.getAttribute('cy');
+        var rx = ovalEllipse.getAttribute('rx');
+        var ry = ovalEllipse.getAttribute('ry');
+
         // WebSocket connection
-        // const socket = new WebSocket('ws://0.0.0.0:8000/ws/video');
-        const socket = new WebSocket('wss://face-antispoof.privately.swiss:8000/ws/video');
+        const socket = new WebSocket('ws://0.0.0.0:8000/ws/video');
+        // const socket = new WebSocket('wss://face-antispoof.privately.swiss:8000/ws/video');
 
         socket.onopen = () => {
             console.log('WebSocket connection established');
@@ -96,13 +120,29 @@
             const response = JSON.parse(event.data);
             // overlay.textContent = `Server Response: ${event.data}`;
             // overlay.textContent = `Face Spoof: ${response["Face Spoof"]} <br>Object Spoof: ${response["Object Spoof"]} <br>Detection: ${response["Detection"]}`;
+            cx = ovalEllipse.getAttribute('cx');
+            cy = ovalEllipse.getAttribute('cy');
+            rx = ovalEllipse.getAttribute('rx');
+            ry = ovalEllipse.getAttribute('ry');
             const text = `Face Detection: <span style="color: ${response["face_detection_c"]};">${response["face_detection"]}</span>
-                        <br>Object Detection: <span style="color: ${response["object_detected_c"]};">${response["object_detected"]}</span>
-                        <br>Eyes Blink: <span style="color: white};">${response["eyes_movement"]}</span>
-                        <br>Mouth Movement: <span style="color: white};">${response["mouth_movement"]}</span>
-                        <br>Object Spoof: <span style="color: ${response["object_antispoof_c"]};">${response["object_antispoof"]}</span>
-                        <br>Face Anti-Spoof: <span style="color: ${response["face_antispoof_c"]};">${response["face_antispoof"]}</span>
                         `;
+            // const text = `Face Detection: <span style="color: ${response["face_detection_c"]};">${response["face_detection"]}</span>
+            //             <br>Object Detection: <span style="color: ${response["object_detected_c"]};">${response["object_detected"]}</span>
+            //             <br>Eyes Blink: <span style="color: white};">${response["eyes_movement"]}</span>
+            //             <br>Mouth Movement: <span style="color: white};">${response["mouth_movement"]}</span>
+            //             <br>Object Spoof: <span style="color: ${response["object_antispoof_c"]};">${response["object_antispoof"]}</span>
+            //             <br>Face Anti-Spoof: <span style="color: ${response["face_antispoof_c"]};">${response["face_antispoof"]}</span>
+            //             <br>Cx,Cy,Rx,Ry: ${cx},${cy},${rx},${ry}</span>
+            //             `;
+            console.log("oval_alignment",response["oval_alignment"]);
+            if (response["oval_alignment"]){
+                ovalEllipse.style.stroke = 'green';
+                ovalEllipse.style.strokeWidth = 7;
+            }
+            else{
+                ovalEllipse.style.stroke = 'white';
+                ovalEllipse.style.strokeWidth = 5;
+            }
                         
             overlay.innerHTML = text;
             
@@ -127,16 +167,56 @@
                     canvas.toBlob((blob) => {
                         if (blob && blob.size > 0) {
                             // Send the JPEG blob to the server via WebSocket
-                            repsonse  = socket.send(blob);
+                            // socket.send(blob);
                             // console.log(repsonse.data)
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                                const base64Image = reader.result;  // Base64 string of the image
+
+                                // Create a JSON object containing the image and array
+                                const jsonData = {
+                                    image: base64Image,    // Base64 encoded image
+                                    ovalCoords: [cx,cy,rx,ry] // Your array data
+                                };
+
+                                // Send the JSON object as a string via WebSocket
+                                socket.send(JSON.stringify(jsonData));
+                            };
+                            reader.readAsDataURL(blob)
                         }
                         
                     }, 'image/jpeg', 0.8); // 0.8 for compression quality
                 }, 400); // Adjust this interval for the frame rate
+
+                video.onloadedmetadata = () => {
+                    adjustOval();
+                };
+
+                // Adjust overlay size on window resize
+                window.addEventListener('resize', adjustOval);
             })
             .catch(error => {
                 console.error('Error accessing camera:', error);
             });
+        function adjustOval() {
+            const videoWidth = video.offsetWidth;
+            const videoheight = video.offsetHeight;
+            const ovalWidth = videoWidth * 0.4; // 40% of video width for the oval
+            const ovalHeight = ovalWidth * 1.5; // 1.6 times width for height
+
+            ovalSvg.style.width = `${videoWidth}px`;
+            ovalSvg.style.height = `${videoheight}px`;
+            ovalEllipse.setAttribute('cx', `${videoWidth/2}px`);
+            ovalEllipse.setAttribute('cy', `${videoheight/2}px`);
+            ovalEllipse.setAttribute('rx', `${videoWidth/5}px`);
+            ovalEllipse.setAttribute('ry', `${videoWidth/5*1.5}px`);
+            // ovalEllipse.cx = `${videoWidth/2}px`;
+            // ovalEllipse.cy = `${videoheight/2}px`;
+            // ovalEllipse.rx = `${videoWidth/2}px`;
+            // ovalEllipse.ry = `${ovalEllipse.rx}px`;
+            
+
+        }
     </script>
 
 </body>

@@ -3,6 +3,7 @@ from src.face_antispoof import predict_facespoof
 from src.object_detection import run_detector, load_objdetection_model
 from src.perspective_distortion import perspective_transformation
 from src.face_movements import eye_blink,mouth_movement
+import math
 
 OBJECT_DETECTION = True
 FACE_ANTISPOOF = True
@@ -69,6 +70,65 @@ def movement(responses,rgb_frame,blink_count,mouth_count,prev_eyes,prev_mouth):
     
     return responses,blink_count,mouth_count,prev_eyes,prev_mouth
 
+head_top = [109,10,338]
+head_bottom = [148,152,377]
+head_left = [93,234,127]
+head_right = [323,454,356]
+head_map = [head_top,head_bottom,head_left,head_right]
+center = [5]
+def face_oval(rgb_frame,oval_coords):
+    """
+    oval_coords : (cx,cy,rx,ry)
+    rgb_frame : numpy array 
+    cx = width/2 and cy = height/2 (ideally)
+    """
+    landmark = detect_landmarks(rgb_frame)
+    # print(oval_coords)
+    cx,cy,rx,ry = oval_coords
+    oval_top = cy-ry
+    oval_bottom = cy+ry
+    oval_left = cx-rx
+    oval_right = cx+rx
+    oval_area = math.pi*rx*ry
+    def margin_percentage(a,b):
+        # if a<b:
+        #     return 0.5
+        return (a-b)/b
+    # top_check = True
+    # print("centerx",(landmark[center[0]][0]-cx)/cx)
+    # print("centery",(landmark[center[0]][1]-cy)/cy)
+    try:
+        center_check = abs((landmark[center[0]][0]-cx)/cx)<0.1 and abs((landmark[center[0]][1]-cy)/cy)<0.2
+        thres = 0.01
+        top_check = margin_percentage(landmark[head_map[0][0]][1],oval_top)>thres or margin_percentage(landmark[head_map[0][1]][1],oval_top)>thres or margin_percentage(landmark[head_map[0][2]][1],oval_top)>thres
 
+        bottom_check = margin_percentage(oval_bottom, landmark[head_map[1][0]][1])>thres or margin_percentage(oval_bottom, landmark[head_map[1][1]][1])>thres or margin_percentage(oval_bottom, landmark[head_map[1][2]][1])>thres
+        bottom_check2 = margin_percentage(oval_bottom, landmark[head_map[1][0]][1])<0.1 or margin_percentage(oval_bottom, landmark[head_map[1][1]][1])<0.1  or margin_percentage(oval_bottom, landmark[head_map[1][2]][1])<0.1 
+        bottom_check =  bottom_check and bottom_check2
+        left_check = margin_percentage(landmark[head_map[2][0]][0],oval_left)>thres or margin_percentage(landmark[head_map[2][1]][0],oval_left)>thres or margin_percentage(landmark[head_map[2][2]][0],oval_left)>thres
+
+        right_check = margin_percentage(oval_right, landmark[head_map[3][0]][0])>thres or margin_percentage(oval_right,landmark[head_map[3][1]][0])>thres or margin_percentage(oval_right, landmark[head_map[3][2]][0])>thres
+
+        face_ry = (landmark[head_map[1][1]][1] - landmark[head_map[0][1]][1])/2
+        face_rx = (landmark[head_map[3][1]][0] - landmark[head_map[2][1]][0])/2
+        face_area = math.pi*face_rx*face_ry
+        area_percent = face_area/oval_area*100
+        area_check = True if area_percent<100 and area_percent>50 else False
+        # print(round(area_percent,2),center_check, top_check, bottom_check, left_check, right_check)
+        # check = (top_check and bottom_check and left_check and right_check) or (top_check and bottom_check and left_check and right_check) or (top_check and bottom_check and left_check and right_check)
+        return area_check and center_check and (top_check and bottom_check and left_check and right_check)
+    except:
+        return False
 
                 
+
+
+
+# thres = 0.05
+# top_check = margin_percentage(landmark[head_map[0][0]][1],oval_top)<thres or margin_percentage(landmark[head_map[0][1]][1],oval_top)<thres or margin_percentage(landmark[head_map[0][2]][1],oval_top)<thres
+
+# bottom_check = margin_percentage(oval_bottom, landmark[head_map[1][0]][1])<thres or margin_percentage(oval_bottom, landmark[head_map[1][1]][1])<thres or margin_percentage(oval_bottom, landmark[head_map[1][2]][1])<thres
+
+# left_check = margin_percentage(landmark[head_map[2][0]][0],oval_left)<thres or margin_percentage(landmark[head_map[2][1]][0],oval_left)<thres or margin_percentage(landmark[head_map[2][2]][0],oval_left)<thres
+
+# right_check = margin_percentage(oval_right, landmark[head_map[3][0]][0])<thres or margin_percentage(oval_right,landmark[head_map[3][1]][0])<thres or margin_percentage(oval_right, landmark[head_map[3][2]][0])<thres
