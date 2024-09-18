@@ -83,8 +83,15 @@ def face_oval(rgb_frame,oval_coords):
     cx = width/2 and cy = height/2 (ideally)
     """
     landmark = detect_landmarks(rgb_frame)
-    # print(oval_coords)
+    print("Frame shape: ",rgb_frame.shape)
+    print("oval_coords:",oval_coords)
+    frame_y = rgb_frame.shape[0]
+    frame_x = rgb_frame.shape[1]
     cx,cy,rx,ry = oval_coords
+    factor_x = (frame_x/2)/cx
+    factor_y = (frame_y/2)/cy
+    cx,cy,rx,ry = cx*factor_x,cy*factor_y,rx*factor_x,ry*factor_y
+    print("new_oval_coords:",(cx,cy,rx,ry))
     oval_top = cy-ry
     oval_bottom = cy+ry
     oval_left = cx-rx
@@ -114,7 +121,7 @@ def face_oval(rgb_frame,oval_coords):
         face_area = math.pi*face_rx*face_ry
         area_percent = face_area/oval_area*100
         area_check = True if area_percent<100 and area_percent>50 else False
-        # print(round(area_percent,2),center_check, top_check, bottom_check, left_check, right_check)
+        print(round(area_percent,2),center_check, top_check, bottom_check, left_check, right_check)
         # check = (top_check and bottom_check and left_check and right_check) or (top_check and bottom_check and left_check and right_check) or (top_check and bottom_check and left_check and right_check)
         return area_check and center_check and (top_check and bottom_check and left_check and right_check)
     except:
