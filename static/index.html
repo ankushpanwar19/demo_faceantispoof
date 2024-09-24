@@ -14,16 +14,30 @@
             align-items: center;
             background-color: #000; /* Black background for better video visibility */
         }
-        #container {
+        /* #container {
             position: relative;
             width: 100%;
-            max-width: 100%; /* Limit the max size of the video */
+            max-width: 100%;
             height: auto;
             margin: auto;
+        } */
+        #container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden; 
         }
         #video {
-            width: 100%;
-            height: auto;
+            /* width: 100%;
+            height: auto; */
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
             transform: scaleX(-1);
         }
         #overlay {
@@ -299,8 +313,8 @@
             ovalSvg.style.height = `${videoheight}px`;
             ovalEllipse.setAttribute('cx', `${videoWidth/2}px`);
             ovalEllipse.setAttribute('cy', `${videoheight/2}px`);
-            ovalEllipse.setAttribute('rx', `${videoWidth/5}px`);
-            ovalEllipse.setAttribute('ry', `${videoWidth/5*1.5}px`);
+            ovalEllipse.setAttribute('rx', `${videoWidth/7}px`);
+            ovalEllipse.setAttribute('ry', `${videoWidth/7*1.5}px`);
             // ovalEllipse.cx = `${videoWidth/2}px`;
             // ovalEllipse.cy = `${videoheight/2}px`;
             // ovalEllipse.rx = `${videoWidth/2}px`;

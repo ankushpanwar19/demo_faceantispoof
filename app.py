@@ -9,7 +9,7 @@ from PIL import Image
 import io
 from pathlib import Path
 import numpy as np
-from test import multimodal_antispoof, movement, face_oval, head_alignment, env_check
+from test import multimodal_antispoof, movement, face_oval, head_alignment, env_check, face_blur_check
 from src.face_detection import detect_face
 
 app = FastAPI()
@@ -41,7 +41,7 @@ async def websocket_endpoint(websocket: WebSocket):
             # Receive video frame from the client
             # print("Received")
             # frame = await websocket.receive_bytes()
-
+            print("********** Next ***********")
             # print("yessss")
             data = await websocket.receive_text()
             json_data = json.loads(data)
@@ -96,7 +96,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     responses["mouth_movement"] = "Landmark model failed"
 
                 try: 
-                    face_oval_check = face_oval(image_from_array,ovalCoords)
+                    face_oval_check, bottom_check, area_check = face_oval(image_from_array,ovalCoords)
                 except:
                     print("Landmark Face oval Error")
                     face_oval_check = False
@@ -113,9 +113,16 @@ async def websocket_endpoint(websocket: WebSocket):
                     responses = multimodal_antispoof(image_from_array,face_box)
 
                     if (head_tilt[0]!='straight' or head_left_right[0]!='straight' or head_up_down[0]!='straight'):
-                        responses["face_detection"] = "Keep your head aligned and straight."
+                        msg=''
+                        if head_tilt[0]!='straight':
+                            msg = "Head is tilted"
+                        elif head_left_right[0]!='straight':
+                            msg = "Looking sideways "
+                        elif head_up_down[0]!='straight':
+                            msg = 'Looking Down'if head_up_down[0]=='looking_down' else 'Looking up' 
+                        responses["face_detection"] = f"Keep you head straight (Issue:{msg})"
                         consecutive_capture = 0
-                        responses["oval_alignment"] = True
+                        responses["oval_alignment"] = False
                     else:
                         responses["face_detection"] = "Perfect! Stay Still"
                         responses["face_detection_c"] = "green"
@@ -128,14 +135,19 @@ async def websocket_endpoint(websocket: WebSocket):
                             print("Spoofcheck",facespoof)
                             # print("Spoofcount",sum(facespoof))
                             
-                            responses["final_object_spoof"] = "Spoof" if sum(objectspoof)>2 else "Real"
-                            responses["final_face_spoof"] = "Spoof" if sum(facespoof)>2 else "Real"
+                            responses["final_object_spoof"] = "Spoof" if sum(objectspoof)/len(objectspoof)>0.5 else "Real"
+                            responses["final_face_spoof"] = "Spoof" if sum(facespoof)/len(objectspoof)>0.5 else "Real"
                             # consecutive_capture = 0
                             print("final_object_spoof: ",responses["final_object_spoof"])
                             print("final_face_spoof: ",responses["final_face_spoof"])
                         
                 else:
-                    responses["face_detection"] = "Align your face within the oval and fill it"
+                    if not bottom_check:
+                        responses["face_detection"] = "Align your chin with oval bottom!"
+                    elif not area_check:
+                        responses["face_detection"] = "Come closer to the camera!"
+                    else:
+                        responses["face_detection"] = "Align your face within the oval and fill it!"
                     responses["oval_alignment"] = False
                     consecutive_capture = 0
                 
