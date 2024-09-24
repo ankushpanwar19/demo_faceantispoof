@@ -9,7 +9,7 @@ from PIL import Image
 import io
 from pathlib import Path
 import numpy as np
-from test import multimodal_antispoof, movement, face_oval
+from test import multimodal_antispoof, movement, face_oval, head_alignment, env_check
 from src.face_detection import detect_face
 
 app = FastAPI()
@@ -33,6 +33,9 @@ async def websocket_endpoint(websocket: WebSocket):
     prev_eyes = ''
     mouth_count = 0
     prev_mouth = ''
+    consecutive_capture = 0
+    objectspoof = []
+    facespoof = []
     try:
         while True:
             # Receive video frame from the client
@@ -65,7 +68,8 @@ async def websocket_endpoint(websocket: WebSocket):
 
             # PREDICTION
             face_box, no_of_faces = detect_face(image_from_array)
-            responses = {"face_detection":"",
+            responses = {"Process":"processing",
+                        "face_detection":"",
                         "face_antispoof":"",
                         "face_antispoof_c":"",
                         "object_detected":"",
@@ -74,24 +78,76 @@ async def websocket_endpoint(websocket: WebSocket):
                         "object_antispoof_c":"",
                         "eyes_movement":"",
                         "mouth_movement":"",
-                        "oval_alignment":False}
+                        "oval_alignment":False,
+                        "final_object_spoof":"",
+                        "final_face_spoof":""}
             # try:
             if no_of_faces == 'single_face':
-                if face_oval(image_from_array,ovalCoords):
+                is_good_lighting, is_blurr = env_check(image_from_array)
+                head_tilt=['straight',0]
+                head_left_right=['straight',0]
+                head_up_down=['straight',0]
+                try:
+                    
+                    head_tilt, head_left_right, head_up_down = head_alignment(image_from_array)
+                except:
+                    print("Landmark Model ERROR")
+                    responses["eyes_movement"] = "Landmark model failed"
+                    responses["mouth_movement"] = "Landmark model failed"
+
+                try: 
+                    face_oval_check = face_oval(image_from_array,ovalCoords)
+                except:
+                    print("Landmark Face oval Error")
+                    face_oval_check = False
+                    consecutive_capture = 0
+
+                if not is_good_lighting:
+                    responses["face_detection"] = "Please be in a well-lit environment"
+                    consecutive_capture = 0
+                elif is_blurr:
+                    responses["face_detection"] = "Video feed is blurry"
+                    consecutive_capture = 0
+                elif face_oval_check:
                     # print("yess")
                     responses = multimodal_antispoof(image_from_array,face_box)
-                    responses["face_detection"] = "Single Face"
-                    responses["face_detection_c"] = "green"
-                    responses["oval_alignment"] = True
+
+                    if (head_tilt[0]!='straight' or head_left_right[0]!='straight' or head_up_down[0]!='straight'):
+                        responses["face_detection"] = "Keep your head aligned and straight."
+                        consecutive_capture = 0
+                        responses["oval_alignment"] = True
+                    else:
+                        responses["face_detection"] = "Perfect! Stay Still"
+                        responses["face_detection_c"] = "green"
+                        responses["oval_alignment"] = True
+                        consecutive_capture +=1
+                        objectspoof.append(responses["object_antispoof"]=='Spoof')
+                        facespoof.append(responses["face_antispoof"]=='Spoof')
+                        print("consecutive_capture:",consecutive_capture)
+                        if consecutive_capture > 5:
+                            print("Spoofcheck",facespoof)
+                            responses["final_object_spoof"] = "Spoof" if sum(objectspoof)>2 else "Real"
+                            responses["final_face_spoof"] = "Spoof" if sum(facespoof)>2 else "Real"
+                            # consecutive_capture = 0
+                            print("final_object_spoof: ",responses["final_object_spoof"])
+                            print("final_face_spoof: ",responses["final_face_spoof"])
+                        
+                else:
+                    responses["face_detection"] = "Align your face within the oval and fill it"
+                    responses["oval_alignment"] = False
+                    consecutive_capture = 0
+                
+                if (head_tilt[0]=='straight' or head_left_right[0]=='straight' or head_up_down[0]=='straight'):
                     try:
                         responses,blink_count,mouth_count,prev_eyes,prev_mouth = movement(responses,image_from_array,blink_count,mouth_count,prev_eyes,prev_mouth)
                     except:
-                        print("ERROR")
+                        print("Landmark Model ERROR 2")
                         responses["eyes_movement"] = "Landmark model failed"
                         responses["mouth_movement"] = "Landmark model failed"
-                else:
-                    responses["face_detection"] = "Place your face in the oval"
-                    responses["oval_alignment"] = False
+                        blink_count = 0
+                        prev_eyes = ''
+                        mouth_count = 0
+                        prev_mouth = ''
 
             elif no_of_faces == 'no_face':
                 responses["face_detection"] = "No Face detected"
@@ -100,6 +156,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 prev_eyes = ''
                 mouth_count = 0
                 prev_mouth = ''
+                consecutive_capture = 0
             else :
                 responses["face_detection"] = "Multiple Face detected"
                 responses["face_detection_c"] = "red"
@@ -107,6 +164,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 prev_eyes = ''
                 mouth_count = 0
                 prev_mouth = ''
+                consecutive_capture = 0
             # except:
             #     print("Prediction Error")
 

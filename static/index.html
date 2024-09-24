@@ -64,6 +64,41 @@
             /*backdrop-filter: blur(5px); /* Blurs the outside */
             z-index: 2;
         }
+        #resultScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.9); /* Dark background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100; /* Higher than the video and overlay */
+            flex-direction: column;
+        }
+
+        #result {
+            position: absolute;
+            /* top: 0;
+            left: 0; */
+            padding:5%;
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            color: rgb(8, 2, 2);
+            /* display: flex; */
+            justify-content: center;
+            align-items: center;
+            font-size: 2vw;
+            z-index: 100;
+            font-family: Arial, Helvetica, sans-serif;
+            font-weight: bold;
+            text-align: center;
+            flex-direction: column;
+            /* height: auto; */
+            /* margin: auto; */
+        }
 
     </style>
 </head>
@@ -75,7 +110,11 @@
         <svg id="ovalSvg" xmlns="http://www.w3.org/2000/svg">
             <ellipse id='ovalEllipse' cx="140" cy="80" rx="50" ry="100" style="fill-opacity:0 ;stroke:white;stroke-width:5" />
             Sorry, your browser does not support inline SVG.  
-         </svg>
+        </svg>
+        <div id="resultScreen" style="display: none;">
+            <div id="result">Verification result will be displayed here.</div>
+        </div>
+        <!-- <div id="result"  style="display: none;"></div> -->
     </div>
     <canvas id="canvas" style="display: none;"></canvas>
 
@@ -89,6 +128,9 @@
         const ovalEllipse = document.getElementById('ovalEllipse');
         const context = canvas.getContext('2d');
         const serverImage = document.getElementById('server-image');
+        const overlay = document.getElementById('overlay');
+        const resultScreen = document.getElementById('resultScreen');
+        const result = document.getElementById('result');
 
         var cx = ovalEllipse.getAttribute('cx');
         var cy = ovalEllipse.getAttribute('cy');
@@ -96,8 +138,8 @@
         var ry = ovalEllipse.getAttribute('ry');
 
         // WebSocket connection
-        // const socket = new WebSocket('ws://0.0.0.0:8000/ws/video');
-        const socket = new WebSocket('wss://face-antispoof.privately.swiss:8000/ws/video');
+        const socket = new WebSocket('ws://0.0.0.0:8000/ws/video');
+        // const socket = new WebSocket('wss://face-antispoof.privately.swiss:8000/ws/video');
 
         socket.onopen = () => {
             console.log('WebSocket connection established');
@@ -110,9 +152,17 @@
         socket.onclose = () => {
             console.log('WebSocket connection closed');
             const text = `Web Socket Connection is closed`;
-            overlay.innerHTML = text;
+            // overlay.innerHTML = text;
         };
         count = 0
+        timeout = 30;
+
+        setTimeout(() => {
+            stopVideoFeed();
+            socket.close();
+            // showResult("TimeOut",'red',"TimeOut",'red');
+            showTimeout();
+        }, timeout*1000);
 
         // Handle incoming WebSocket messages
         socket.onmessage = (event) => {
@@ -143,11 +193,52 @@
                 ovalEllipse.style.stroke = 'white';
                 ovalEllipse.style.strokeWidth = 5;
             }
+            
                         
             overlay.innerHTML = text;
+            if (response["final_object_spoof"] === 'Spoof' || response["final_object_spoof"] === 'Real') {
+                stopVideoFeed(); // Stop the video feed
+                socket.close(); // Close WebSocket connection
+                let object_spoof_color = response["final_object_spoof"] === 'Real' ? 'green':'red';
+                let face_spoof_color = response["final_face_spoof"] === 'Real' ? 'green':'red';
+                showResult(response["final_object_spoof"],object_spoof_color,response["final_face_spoof"],face_spoof_color); // Show result screen
+                
+            }
+            
             
         };
+        function stopVideoFeed() {
+            overlay.style.display = 'None';
+            ovalEllipse.style.display = 'None';
+            const stream = video.srcObject;
+            const tracks = stream.getTracks();
+            tracks.forEach(track => track.stop());
+            video.srcObject = null;
+            // overlay.style.display = None;
+            // ovalSvg.style.display = None;
+        };
 
+        // Show result screen
+        function showResult(object_spoof,object_spoof_color,face_spoof,face_spoof_color) {
+            resultScreen.style.display = 'flex';
+            result.style.display = 'flex';
+            console.log("Final Status",object_spoof);
+            // let finalresult = 'Spoof';
+            let finalresult = object_spoof === 'Spoof' || face_spoof === "Spoof" ? 'Spoof':'Real';
+            let finalresult_color = finalresult === 'Spoof' ? 'red':'green';
+
+            result.innerHTML = `<div>Object Model: <span style="color:${object_spoof_color}">${object_spoof}</div>
+                                <div> Face AntiSpoof: <span style="color:${face_spoof_color}">${face_spoof}</span></div>
+                                <br><div style="font-style: italic;"> Final result: <span style="color:${finalresult_color}">${face_spoof}</span></div>
+                                `;
+        };
+        function showTimeout() {
+            resultScreen.style.display = 'flex';
+            result.style.display = 'flex';
+            
+            result.innerHTML = `<div>Verification failed: <span style="color:red">TIME OUT</span></div>
+                                <div style="margin-top: 10px;"> <span> Please provide sufficient image samples for verification within ${timeout} secs.</span></div>`;
+        };
         // Get user media (camera feed)
         navigator.mediaDevices.getUserMedia({ video: true })
             .then(stream => {
