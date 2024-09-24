@@ -46,8 +46,8 @@ def multimodal_antispoof(rgb_frame,face_bbox):
             if obj in ['laptop','tv','cellphone','book','remote']:
                 ymin,xmin,ymax,xmax = obj_bbox[i]
                 margin = 20
-                a = bbox_x >= max(0,xmin-margin)
-                b = bbox_y >= max(0,ymin-margin)
+                a = bbox_x >= max(0,xmin+margin)
+                b = bbox_y >= max(0,ymin+margin)
                 c = min(image_width, bbox_x + bbox_width) <= min(image_width, xmax+margin)
                 d = min(image_height, bbox_y + bbox_height) <= min(image_height, ymax+margin)
                 if a and b and c and d:
@@ -130,7 +130,7 @@ def face_oval(rgb_frame,oval_coords):
         face_area = math.pi*face_rx*face_ry
         area_percent = face_area/oval_area*100
         area_check = True if area_percent<100 and area_percent>40 else False
-        print(round(area_percent,2),center_check, top_check, bottom_check, left_check, right_check)
+        # print(round(area_percent,2),center_check, top_check, bottom_check, left_check, right_check)
         # check = (top_check and bottom_check and left_check and right_check) or (top_check and bottom_check and left_check and right_check) or (top_check and bottom_check and left_check and right_check)
         return area_check and center_check and (top_check and bottom_check and left_check and right_check)
     except:
