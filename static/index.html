@@ -182,22 +182,12 @@
         socket.onmessage = (event) => {
 
             const response = JSON.parse(event.data);
-            // overlay.textContent = `Server Response: ${event.data}`;
-            // overlay.textContent = `Face Spoof: ${response["Face Spoof"]} <br>Object Spoof: ${response["Object Spoof"]} <br>Detection: ${response["Detection"]}`;
             cx = ovalEllipse.getAttribute('cx');
             cy = ovalEllipse.getAttribute('cy');
             rx = ovalEllipse.getAttribute('rx');
             ry = ovalEllipse.getAttribute('ry');
             const text = `Face Detection: <span style="color: ${response["face_detection_c"]};">${response["face_detection"]}</span>
-                        `;
-            // const text = `Face Detection: <span style="color: ${response["face_detection_c"]};">${response["face_detection"]}</span>
-            //             <br>Object Detection: <span style="color: ${response["object_detected_c"]};">${response["object_detected"]}</span>
-            //             <br>Eyes Blink: <span style="color: white};">${response["eyes_movement"]}</span>
-            //             <br>Mouth Movement: <span style="color: white};">${response["mouth_movement"]}</span>
-            //             <br>Object Spoof: <span style="color: ${response["object_antispoof_c"]};">${response["object_antispoof"]}</span>
-            //             <br>Face Anti-Spoof: <span style="color: ${response["face_antispoof_c"]};">${response["face_antispoof"]}</span>
-            //             <br>Cx,Cy,Rx,Ry: ${cx},${cy},${rx},${ry}</span>
-            //             `;
+            `;
             console.log("oval_alignment",response["oval_alignment"]);
             if (response["oval_alignment"]){
                 ovalEllipse.style.stroke = 'green';
@@ -308,17 +298,19 @@
             const videoheight = video.offsetHeight;
             const ovalWidth = videoWidth * 0.4; // 40% of video width for the oval
             const ovalHeight = ovalWidth * 1.5; // 1.6 times width for height
-
+            
+            console.log("Shape",videoWidth,videoheight)
             ovalSvg.style.width = `${videoWidth}px`;
             ovalSvg.style.height = `${videoheight}px`;
             ovalEllipse.setAttribute('cx', `${videoWidth/2}px`);
             ovalEllipse.setAttribute('cy', `${videoheight/2}px`);
-            ovalEllipse.setAttribute('rx', `${videoWidth/7}px`);
-            ovalEllipse.setAttribute('ry', `${videoWidth/7*1.5}px`);
-            // ovalEllipse.cx = `${videoWidth/2}px`;
-            // ovalEllipse.cy = `${videoheight/2}px`;
-            // ovalEllipse.rx = `${videoWidth/2}px`;
-            // ovalEllipse.ry = `${ovalEllipse.rx}px`;
+            if (videoWidth>videoheight){
+                ovalEllipse.setAttribute('rx', `${videoheight/4}px`);
+                ovalEllipse.setAttribute('ry', `${videoheight/4*1.5}px`);
+            }else{
+                ovalEllipse.setAttribute('rx', `${videoWidth/2.5}px`);
+                ovalEllipse.setAttribute('ry', `${videoWidth/2.5*1.5}px`);
+            }
             
 
         }
