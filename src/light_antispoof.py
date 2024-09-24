@@ -25,7 +25,7 @@ spoof_model = TorchCNN(spoof_model, spoof_model_path, config, device=device)
 def light_predict_facespoof(rgb_frame, face_bbox):
     """Get prediction for all detected faces on the frame"""
     # faces = []
-    print("Facebox",face_bbox)
+    # print("Facebox",face_bbox)
     x, y, w, h = face_bbox
     face = rgb_frame[y:y + h, x:x + w]
     faces = np.array([face])

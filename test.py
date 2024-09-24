@@ -1,4 +1,5 @@
 import math
+import numpy as np
 from src.face_detection import detect_landmarks
 from src.face_antispoof import predict_facespoof
 from src.light_antispoof import light_predict_facespoof
@@ -40,6 +41,7 @@ def multimodal_antispoof(rgb_frame,face_bbox):
     if OBJECT_DETECTION:
         obj_spoof = "Real"
         obj_detected, obj_bbox = run_detector(rgb_frame)
+        print("Object:",obj_detected)
         responses["object_detected"]=obj_detected
         responses["object_detected_c"]='green'
         for i, obj in enumerate(obj_detected):
@@ -114,12 +116,12 @@ def face_oval(rgb_frame,oval_coords):
     # print("centerx",(landmark[center[0]][0]-cx)/cx)
     # print("centery",(landmark[center[0]][1]-cy)/cy)
     try:
-        center_check = abs((landmark[center[0]][0]-cx)/cx)<0.2 and abs((landmark[center[0]][1]-cy)/cy)<0.3
-        thres = -0.05
+        center_check = abs((landmark[center[0]][0]-cx)/cx)<0.15 and abs((landmark[center[0]][1]-cy)/cy)<0.2
+        thres = -0.01
         top_check = margin_percentage(landmark[head_map[0][0]][1],oval_top)>thres or margin_percentage(landmark[head_map[0][1]][1],oval_top)>thres or margin_percentage(landmark[head_map[0][2]][1],oval_top)>thres
 
         bottom_check = margin_percentage(oval_bottom, landmark[head_map[1][0]][1])>thres or margin_percentage(oval_bottom, landmark[head_map[1][1]][1])>thres or margin_percentage(oval_bottom, landmark[head_map[1][2]][1])>thres
-        bottom_check2 = margin_percentage(oval_bottom, landmark[head_map[1][0]][1])<0.15 or margin_percentage(oval_bottom, landmark[head_map[1][1]][1])<0.15  or margin_percentage(oval_bottom, landmark[head_map[1][2]][1])<0.15
+        bottom_check2 = margin_percentage(oval_bottom, landmark[head_map[1][0]][1])<0.2 or margin_percentage(oval_bottom, landmark[head_map[1][1]][1])<0.15  or margin_percentage(oval_bottom, landmark[head_map[1][2]][1])<0.2
         bottom_check =  bottom_check and bottom_check2
         left_check = margin_percentage(landmark[head_map[2][0]][0],oval_left)>thres or margin_percentage(landmark[head_map[2][1]][0],oval_left)>thres or margin_percentage(landmark[head_map[2][2]][0],oval_left)>thres
 
@@ -129,10 +131,10 @@ def face_oval(rgb_frame,oval_coords):
         face_rx = (landmark[head_map[3][1]][0] - landmark[head_map[2][1]][0])/2
         face_area = math.pi*face_rx*face_ry
         area_percent = face_area/oval_area*100
-        area_check = True if area_percent<100 and area_percent>40 else False
-        # print(round(area_percent,2),center_check, top_check, bottom_check, left_check, right_check)
+        area_check = True if area_percent<100 and area_percent>35 else False
+        print(round(area_percent,2),area_check,center_check, top_check, bottom_check, left_check, right_check)
         # check = (top_check and bottom_check and left_check and right_check) or (top_check and bottom_check and left_check and right_check) or (top_check and bottom_check and left_check and right_check)
-        return area_check and center_check and (top_check and bottom_check and left_check and right_check)
+        return area_check and center_check and (top_check and bottom_check and left_check and right_check), bottom_check,area_check
     except:
         return False
     
@@ -152,3 +154,9 @@ def head_alignment(rgb_frame):
 
     return head_tilt, head_left_right, head_up_down
 
+def face_blur_check(rgb_frame, face_bbox):
+    x, y, w, h = face_bbox
+    face = rgb_frame[y:y + h, x:x + w]
+    is_blurr, lap_var = check_blurr(face)
+    print("Face blurr:",is_blurr, lap_var )
+    return is_blurr
