@@ -8,6 +8,50 @@ right_eye_lid = [386, 374] #[upperlid,lowerlid]
 left_eye_corners = [33,133]
 right_eye_corners = [362,263]
 
+def calculate_ear(landmarks, eye_indices):
+     # Convert landmarks to NumPy arrays (x, y) for the eye
+    p1 = np.array(landmarks[eye_indices[0]])  # horizontal start point
+    p2 = np.array(landmarks[eye_indices[1]])  # upper vertical
+    p3 = np.array(landmarks[eye_indices[2]])  # upper vertical
+    p4 = np.array(landmarks[eye_indices[3]])  # horizontal end point
+    p5 = np.array(landmarks[eye_indices[4]])  # lower vertical
+    p6 = np.array(landmarks[eye_indices[5]])  # lower vertical
+
+    # Compute vertical distances
+    vertical_1 = np.linalg.norm(p2 - p6)
+    vertical_2 = np.linalg.norm(p3 - p5)
+
+    # Compute horizontal distance
+    horizontal = np.linalg.norm(p1 - p4)
+
+    # Compute the EAR
+    ear = (vertical_1 + vertical_2) / (2.0 * horizontal)
+    return ear
+
+def eye_blink_ear(landmarks, blink_count=0, prev_eyes=''):
+    EAR_THRESHOLD = 0.22
+    left_eye_indices = [133, 158, 159, 33, 145, 153]
+    right_eye_indices = [362, 385, 386, 263, 380, 374]
+    left_eye_ear = calculate_ear(landmarks,left_eye_indices)
+    right_eye_ear = calculate_ear(landmarks,right_eye_indices)
+    
+    # print("Eye:",left_eye_ear,left_eye_ear)
+    if (left_eye_ear<EAR_THRESHOLD ) or (right_eye_ear<EAR_THRESHOLD):
+        if prev_eyes == '':
+            prev_eyes = 'closed'
+            blink_count +=1
+        elif prev_eyes == 'opened':
+            blink_count +=1
+            prev_eyes = 'closed'
+
+    else:
+        if prev_eyes == '':
+            prev_eyes = 'opened'
+        elif prev_eyes == 'closed':
+            blink_count +=1
+            prev_eyes = 'opened'
+
+    return blink_count, prev_eyes
 
 def eye_blink(landmarks, blink_count=0, prev_eyes=''):
     

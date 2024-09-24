@@ -38,11 +38,12 @@ def detect_landmarks(rgb_frame):
     landmarks = []
     image_height, image_width, _ = rgb_frame.shape
     mesh_results = face_mesh.process(rgb_frame)
+    face_landmark = mesh_results.multi_face_landmarks[0]
     if mesh_results.multi_face_landmarks:
         for face_landmarks in mesh_results.multi_face_landmarks:
             landmarks = [(int(pt.x * image_width), int(pt.y * image_height)) for pt in face_landmarks.landmark]
 
-    return landmarks
+    return landmarks, face_landmark
 
 if __name__ == "__main__":
     import cv2
