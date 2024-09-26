@@ -55,7 +55,7 @@ def multimodal_antispoof(rgb_frame,face_bbox):
                 print("Object coords: ",xmin,ymin,xmax,ymax)
                 print("Face coords: ",bbox_x,bbox_y,bbox_x+bbox_width,bbox_y + bbox_height)
                 print("OBJECT_DETECTION:",a,b,c,d)
-                if a and b and c and d:
+                if sum([a,b,c,d])>=3:
                     obj_spoof = "Spoof"
                     break
                 
