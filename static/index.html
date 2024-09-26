@@ -226,15 +226,25 @@
         function showResult(object_spoof,object_spoof_color,face_spoof,face_spoof_color) {
             resultScreen.style.display = 'flex';
             result.style.display = 'flex';
-            console.log("Final Status",object_spoof);
+            console.log("Object Spoof Status: ",object_spoof);
+            console.log("Face Spoof Status: ",face_spoof);
             // let finalresult = 'Spoof';
             let finalresult = object_spoof === 'Spoof' || face_spoof === "Spoof" ? 'Spoof':'Real';
             let finalresult_color = finalresult === 'Spoof' ? 'red':'green';
 
-            result.innerHTML = `<div>Object Model: <span style="color:${object_spoof_color}">${object_spoof}</div>
-                                <div> Face AntiSpoof: <span style="color:${face_spoof_color}">${face_spoof}</span></div>
-                                <br><div style="font-style: italic;"> Final result: <span style="color:${finalresult_color}">${finalresult}</span></div>
+            // result.innerHTML = `<div>Object Model: <span style="color:${object_spoof_color}">${object_spoof}</div>
+            //                     <div> Face AntiSpoof: <span style="color:${face_spoof_color}">${face_spoof}</span></div>
+            //                     <br><div style="font-style: italic;"> Final result: <span style="color:${finalresult_color}">${finalresult}</span></div>
+                                // `;
+            console.log("Final Status",finalresult);
+            if (finalresult === 'Spoof'){
+                result.innerHTML = `<br><div style="font-style: italic;"> Final result: <span style="color:${finalresult_color}">We need a clearer selfie. Please make sure it's a real face with proper pose and good lighting.</span></div>
                                 `;
+            }
+            else{
+                result.innerHTML = `<br><div style="font-style: italic;"> Final result: <span style="color:${finalresult_color}">Real Face</span></div>
+                                `;
+            }
         };
         function showTimeout() {
             resultScreen.style.display = 'flex';
