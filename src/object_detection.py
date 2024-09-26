@@ -63,7 +63,7 @@ def run_detector(img):
     result['detection_class_labels'] = detector.get_tensor(output_details[1]['index'])
     result['detection_scores'] = detector.get_tensor(output_details[2]['index'])
 
-    THRESHOLD = 0.3
+    THRESHOLD = 0.2
     detected_parts = result['detection_class_labels'][result['detection_scores']>THRESHOLD]
     detected_bbox = result['detection_boxes'][result['detection_scores']>THRESHOLD] *  np.array([h,w,h,w])
     detected_bbox = detected_bbox.astype(np.int32)
