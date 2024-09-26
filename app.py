@@ -101,15 +101,21 @@ async def websocket_endpoint(websocket: WebSocket):
                     print("Landmark Face oval Error")
                     face_oval_check = False
                     consecutive_capture = 0
+                    objectspoof = []
+                    facespoof = []
                     bottom_check = False
                     area_check = False
 
                 if not is_good_lighting:
                     responses["face_detection"] = "Please be in a well-lit environment"
                     consecutive_capture = 0
+                    objectspoof = []
+                    facespoof = []
                 elif is_blurr:
                     responses["face_detection"] = "Video feed is blurry"
                     consecutive_capture = 0
+                    objectspoof = []
+                    facespoof = []
                 elif face_oval_check:
                     # print("yess")
                     responses = multimodal_antispoof(image_from_array,face_box)
@@ -124,6 +130,8 @@ async def websocket_endpoint(websocket: WebSocket):
                             msg = 'Looking Down'if head_up_down[0]=='looking_down' else 'Looking up' 
                         responses["face_detection"] = f"Keep you head straight (Issue:{msg})"
                         consecutive_capture = 0
+                        objectspoof = []
+                        facespoof = []
                         responses["oval_alignment"] = False
                     else:
                         responses["face_detection"] = "Perfect! Stay Still"
@@ -153,6 +161,8 @@ async def websocket_endpoint(websocket: WebSocket):
                         responses["face_detection"] = "Align your face within the oval and fill it!"
                     responses["oval_alignment"] = False
                     consecutive_capture = 0
+                    objectspoof = []
+                    facespoof = []
                 
                 if (head_tilt[0]=='straight' or head_left_right[0]=='straight' or head_up_down[0]=='straight'):
                     try:
@@ -174,6 +184,9 @@ async def websocket_endpoint(websocket: WebSocket):
                 mouth_count = 0
                 prev_mouth = ''
                 consecutive_capture = 0
+                objectspoof = []
+                facespoof = []
+                
             else :
                 responses["face_detection"] = "Multiple Face detected"
                 responses["face_detection_c"] = "red"
@@ -182,6 +195,8 @@ async def websocket_endpoint(websocket: WebSocket):
                 mouth_count = 0
                 prev_mouth = ''
                 consecutive_capture = 0
+                objectspoof = []
+                facespoof = []
             # except:
             #     print("Prediction Error")
 
