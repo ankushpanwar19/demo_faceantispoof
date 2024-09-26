@@ -101,6 +101,8 @@ async def websocket_endpoint(websocket: WebSocket):
                     print("Landmark Face oval Error")
                     face_oval_check = False
                     consecutive_capture = 0
+                    bottom_check = False
+                    area_check = False
 
                 if not is_good_lighting:
                     responses["face_detection"] = "Please be in a well-lit environment"
