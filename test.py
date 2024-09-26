@@ -50,9 +50,9 @@ def multimodal_antispoof(rgb_frame,face_bbox):
                 margin = 0.1
                 a = bbox_x >= max(0,xmin+xmin*margin)
                 b = bbox_y >= max(0,ymin+ymin*margin)
-                c = min(image_width, bbox_x + bbox_width) <= min(image_width, xmax+margin)
-                d = min(image_height, bbox_y + bbox_height) <= min(image_height, ymax+margin)
-                print("OBJECT_DETECTION:",c,d)
+                c = min(image_width, bbox_x + bbox_width) <= min(image_width, xmax+xmax*margin)
+                d = min(image_height, bbox_y + bbox_height) <= min(image_height, ymax+ymax*margin)
+                print("OBJECT_DETECTION:",a,b,c,d)
                 if a and b and c and d:
                     obj_spoof = "Spoof"
                     break
