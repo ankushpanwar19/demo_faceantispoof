@@ -136,7 +136,7 @@ async def websocket_endpoint(websocket: WebSocket):
                             print("FaceSpoof",facespoof)
                             # print("Spoofcount",sum(facespoof))
                             
-                            responses["final_object_spoof"] = "Spoof" if sum(objectspoof)/len(objectspoof)>0.5 else "Real"
+                            responses["final_object_spoof"] = "Spoof" if sum(objectspoof)/len(objectspoof)>0 else "Real"
                             responses["final_face_spoof"] = "Spoof" if sum(facespoof)/len(facespoof)>0.5 else "Real"
                             # consecutive_capture = 0
                             print("final_object_spoof: ",responses["final_object_spoof"])
