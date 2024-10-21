@@ -134,7 +134,7 @@ def face_oval(rgb_frame,oval_coords):
         face_rx = (landmark[head_map[3][1]][0] - landmark[head_map[2][1]][0])/2
         face_area = math.pi*face_rx*face_ry
         area_percent = face_area/oval_area*100
-        area_check = True if area_percent<100 and area_percent>35 else False
+        area_check = True if area_percent<90 and area_percent>35 else False
         print(round(area_percent,2),area_check,center_check, top_check, bottom_check, left_check, right_check)
         # check = (top_check and bottom_check and left_check and right_check) or (top_check and bottom_check and left_check and right_check) or (top_check and bottom_check and left_check and right_check)
         return area_check and center_check and (top_check and bottom_check and left_check and right_check), bottom_check,area_check,area_percent
@@ -163,3 +163,9 @@ def face_blur_check(rgb_frame, face_bbox):
     is_blurr, lap_var = check_blurr(face)
     print("Face blurr:",is_blurr, lap_var )
     return is_blurr
+
+def perspective_distortion_ratio(rgb_frame):
+    landmarks,face_landmarks = detect_landmarks(rgb_frame)
+    perspective_ratio = perspective_transformation(landmarks)
+    return perspective_ratio
+    

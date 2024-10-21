@@ -9,7 +9,7 @@ from PIL import Image
 import io
 from pathlib import Path
 import numpy as np
-from test import multimodal_antispoof, movement, face_oval, head_alignment, env_check, face_blur_check
+from test import multimodal_antispoof, movement, face_oval, head_alignment, env_check, face_blur_check,perspective_distortion_ratio
 from src.face_detection import detect_face
 
 app = FastAPI()
@@ -49,6 +49,8 @@ async def websocket_endpoint(websocket: WebSocket):
             # Extract the image and array from the received JSON
             image_base64 = json_data['image']
             ovalCoords = json_data['ovalCoords']
+            oval_enlarge = json_data['ovalEnlarge']
+            print(oval_enlarge)
             ovalCoords = list(ovalCoords)
             ovalCoords = [ float(num.split('p')[0]) for num in ovalCoords]
 
@@ -63,11 +65,11 @@ async def websocket_endpoint(websocket: WebSocket):
 
             # Convert the image to RGB format
             rgb_image = image.convert("RGB")
-            image_from_array = np.array(rgb_image)
-            # print(image_from_array.shape)
+            image_array = np.array(rgb_image)
+            # print(image_array.shape)
 
             # PREDICTION
-            face_box, no_of_faces = detect_face(image_from_array)
+            face_box, no_of_faces = detect_face(image_array)
             responses = {"Process":"processing",
                         "face_detection":"",
                         "face_antispoof":"",
@@ -80,23 +82,25 @@ async def websocket_endpoint(websocket: WebSocket):
                         "mouth_movement":"",
                         "oval_alignment":False,
                         "final_object_spoof":"",
-                        "final_face_spoof":""}
+                        "final_face_spoof":"",
+                        "perspective_ratio":"",
+                        }
             # try:
             if no_of_faces == 'single_face':
-                is_good_lighting, is_blurr = env_check(image_from_array)
+                is_good_lighting, is_blurr = env_check(image_array)
                 head_tilt=['straight',0]
                 head_left_right=['straight',0]
                 head_up_down=['straight',0]
                 try:
                     
-                    head_tilt, head_left_right, head_up_down = head_alignment(image_from_array)
+                    head_tilt, head_left_right, head_up_down = head_alignment(image_array)
                 except:
                     print("Landmark Model ERROR")
                     responses["eyes_movement"] = "Landmark model failed"
                     responses["mouth_movement"] = "Landmark model failed"
 
                 try: 
-                    face_oval_check, bottom_check, area_check,area_percent = face_oval(image_from_array,ovalCoords)
+                    face_oval_check, bottom_check, area_check,area_percent = face_oval(image_array,ovalCoords)
                 except:
                     print("Landmark Face oval Error")
                     face_oval_check = False
@@ -118,7 +122,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     facespoof = []
                 elif face_oval_check:
                     # print("yess")
-                    responses = multimodal_antispoof(image_from_array,face_box)
+                    responses = multimodal_antispoof(image_array,face_box)
 
                     if (head_tilt[0]!='straight' or head_left_right[0]!='straight' or head_up_down[0]!='straight'):
                         msg=''
@@ -151,7 +155,10 @@ async def websocket_endpoint(websocket: WebSocket):
                             # consecutive_capture = 0
                             print("final_object_spoof: ",responses["final_object_spoof"])
                             print("final_face_spoof: ",responses["final_face_spoof"])
-                        
+                                
+                        perspective_ratio = perspective_distortion_ratio(image_array)
+                        responses['perspective_ratio'] = perspective_ratio
+                    
                 else:
                     if area_percent>100:
                         responses["face_detection"] = "Distance yourself from the camera!"
@@ -168,7 +175,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 
                 if (head_tilt[0]=='straight' or head_left_right[0]=='straight' or head_up_down[0]=='straight'):
                     try:
-                        responses,blink_count,mouth_count,prev_eyes,prev_mouth = movement(responses,image_from_array,blink_count,mouth_count,prev_eyes,prev_mouth)
+                        responses,blink_count,mouth_count,prev_eyes,prev_mouth = movement(responses,image_array,blink_count,mouth_count,prev_eyes,prev_mouth)
                     except:
                         print("Landmark Model ERROR 2")
                         responses["eyes_movement"] = "Landmark model failed"
