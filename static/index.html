@@ -157,6 +157,8 @@
         var rx = ovalEllipse.getAttribute('rx');
         var ry = ovalEllipse.getAttribute('ry');
         var enlarge_oval_flag = true;
+        var perspective_ratio_far = 0.0;
+        var distortion_ratio = [];
 
         // WebSocket connection
         // const socket = new WebSocket('ws://0.0.0.0:8000/ws/video');
@@ -205,8 +207,16 @@
                 ovalEllipse.setAttribute('rx', `${parseInt(rx) * 1.5}px`);  // 50% larger
                 ovalEllipse.setAttribute('ry', `${parseInt(ry) * 1.5}px`);
                     }, 500);
+                perspective_ratio_far = response['perspective_ratio']
+                } 
+                else{
+                    var final_ratio = response['perspective_ratio']/perspective_ratio_far
+                    console.log("final_ratio",final_ratio)
+                    distortion_ratio.push(final_ratio)
+                    console.log("Distortion_ratio",distortion_ratio)
                 }
                 enlarge_oval_flag = false;
+                console.log(response['perspective_ratio'])
             }
             else{
                 ovalEllipse.style.stroke = 'white';
@@ -243,6 +253,11 @@
             result.style.display = 'flex';
             console.log("Object Spoof Status: ",object_spoof);
             console.log("Face Spoof Status: ",face_spoof);
+            total = 0.0
+            for(var i = 0; i < distortion_ratio.length; i++) {
+                total += distortion_ratio[i];
+            }
+            var avg_distortion_ratio = total / distortion_ratio.length;
             // let finalresult = 'Spoof';
             let finalresult = object_spoof === 'Spoof' || face_spoof === "Spoof" ? 'Spoof':'Real';
             let finalresult_color = finalresult === 'Spoof' ? 'red':'green';
@@ -253,11 +268,11 @@
                                 // `;
             console.log("Final Status",finalresult);
             if (finalresult === 'Spoof'){
-                result.innerHTML = `<br><div style="font-style: italic;"> Final result: <span style="color:${finalresult_color}">We need a clearer selfie. Please make sure it's a real face with proper pose and good lighting.</span></div>
+                result.innerHTML = `<br><div style="font-style: italic;"> Final result: <span style="color:${finalresult_color}">We need a clearer selfie. Please make sure it's a real face with proper pose and good lighting.</span><span><br>Distortion Ratio: ${avg_distortion_ratio}<span></div>
                                 `;
             }
             else{
-                result.innerHTML = `<br><div style="font-style: italic;"> Final result: <span style="color:${finalresult_color}">Real Face</span></div>
+                result.innerHTML = `<br><div style="font-style: italic;"> Final result: <span style="color:${finalresult_color}">Real Face</span><span><br>Distortion Ratio: ${avg_distortion_ratio}<span></div>
                                 `;
             }
         };
@@ -296,7 +311,9 @@
                                 // Create a JSON object containing the image and array
                                 const jsonData = {
                                     image: base64Image,    // Base64 encoded image
-                                    ovalCoords: [cx,cy,rx,ry] // Your array data
+                                    ovalCoords: [cx,cy,rx,ry], // Your array data
+                                    ovalEnlarge: enlarge_oval_flag,
+                                    perspectiveRatioFar: perspective_ratio_far
                                 };
 
                                 // Send the JSON object as a string via WebSocket
