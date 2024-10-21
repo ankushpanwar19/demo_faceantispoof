@@ -153,13 +153,12 @@ async def websocket_endpoint(websocket: WebSocket):
                             print("final_face_spoof: ",responses["final_face_spoof"])
                         
                 else:
-                    if not bottom_check:
+                    if area_percent>100:
+                        responses["face_detection"] = "Distance yourself from the camera!"
+                    elif area_percent<100 and (not area_check):
+                        responses["face_detection"] = "Come closer to the camera!"                    
+                    elif not bottom_check:
                         responses["face_detection"] = "Align your chin with oval bottom!"
-                    elif not area_check:
-                        if area_percent<100:
-                            responses["face_detection"] = "Come closer to the camera!"
-                        else:
-                            responses["face_detection"] = "Distance yourself from the camera!"
                     else:
                         responses["face_detection"] = "Align your face within the oval and fill it!"
                     responses["oval_alignment"] = False
