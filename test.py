@@ -137,7 +137,7 @@ def face_oval(rgb_frame,oval_coords):
         area_check = True if area_percent<100 and area_percent>35 else False
         print(round(area_percent,2),area_check,center_check, top_check, bottom_check, left_check, right_check)
         # check = (top_check and bottom_check and left_check and right_check) or (top_check and bottom_check and left_check and right_check) or (top_check and bottom_check and left_check and right_check)
-        return area_check and center_check and (top_check and bottom_check and left_check and right_check), bottom_check,area_check
+        return area_check and center_check and (top_check and bottom_check and left_check and right_check), bottom_check,area_check,area_percent
     except:
         return False
     

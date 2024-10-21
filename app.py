@@ -96,7 +96,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     responses["mouth_movement"] = "Landmark model failed"
 
                 try: 
-                    face_oval_check, bottom_check, area_check = face_oval(image_from_array,ovalCoords)
+                    face_oval_check, bottom_check, area_check,area_percent = face_oval(image_from_array,ovalCoords)
                 except:
                     print("Landmark Face oval Error")
                     face_oval_check = False
@@ -156,7 +156,10 @@ async def websocket_endpoint(websocket: WebSocket):
                     if not bottom_check:
                         responses["face_detection"] = "Align your chin with oval bottom!"
                     elif not area_check:
-                        responses["face_detection"] = "Come closer to the camera!"
+                        if area_percent<100:
+                            responses["face_detection"] = "Come closer to the camera!"
+                        else:
+                            responses["face_detection"] = "Distance yourself from the camera!"
                     else:
                         responses["face_detection"] = "Align your face within the oval and fill it!"
                     responses["oval_alignment"] = False
