@@ -113,6 +113,12 @@
             /* height: auto; */
             /* margin: auto; */
         }
+        #ovalEllipse {
+        fill-opacity: 0;
+        stroke: white;
+        stroke-width: 5;
+        transition: stroke 0.5s ease, rx 1s ease, ry 1s ease;
+        }
 
     </style>
 </head>
@@ -150,6 +156,7 @@
         var cy = ovalEllipse.getAttribute('cy');
         var rx = ovalEllipse.getAttribute('rx');
         var ry = ovalEllipse.getAttribute('ry');
+        var enlarge_oval_flag = true;
 
         // WebSocket connection
         // const socket = new WebSocket('ws://0.0.0.0:8000/ws/video');
@@ -192,6 +199,14 @@
             if (response["oval_alignment"]){
                 ovalEllipse.style.stroke = 'green';
                 ovalEllipse.style.strokeWidth = 7;
+                if (enlarge_oval_flag){
+                setTimeout(() => {
+                // Increase the oval size
+                ovalEllipse.setAttribute('rx', `${parseInt(rx) * 1.5}px`);  // 50% larger
+                ovalEllipse.setAttribute('ry', `${parseInt(ry) * 1.5}px`);
+                    }, 500);
+                }
+                enlarge_oval_flag = false;
             }
             else{
                 ovalEllipse.style.stroke = 'white';
