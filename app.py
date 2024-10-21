@@ -160,7 +160,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     elif not bottom_check:
                         responses["face_detection"] = "Align your chin with oval bottom!"
                     else:
-                        responses["face_detection"] = "Align your face within the oval and fill it!"
+                        responses["face_detection"] = "Position your face completely inside the oval!"
                     responses["oval_alignment"] = False
                     consecutive_capture = 0
                     objectspoof = []
