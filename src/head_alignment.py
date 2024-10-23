@@ -84,10 +84,11 @@ def check_head_alignment(face_landmarks,rgb_frame):
 
     head_left_right = ['side' if abs(y_side_look)>25 else 'straight', round(y_side_look,2)]
 
-    if depth_diff_head_chin<-0.08:
+    print("depth_diff_head_chin: ",depth_diff_head_chin)
+    if depth_diff_head_chin<-0.05:
         head_up_down ='looking_down'
         # head_up_down ='look_straight'
-    elif depth_diff_head_chin>0.06:
+    elif depth_diff_head_chin>0.05:
         head_up_down ='looking_up'
         # head_up_down ='look_straight'
     else:

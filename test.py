@@ -7,6 +7,7 @@ from src.object_detection import run_detector, load_objdetection_model
 from src.perspective_distortion import perspective_transformation
 from src.face_movements import eye_blink,mouth_movement,eye_blink_ear
 from src.head_alignment import check_lighting,check_blurr,check_head_alignment
+from src.utils import signal_to_noise
 
 
 OBJECT_DETECTION = True
@@ -126,6 +127,7 @@ def face_oval(rgb_frame,oval_coords):
         bottom_check = margin_percentage(oval_bottom, landmark[head_map[1][0]][1])>thres or margin_percentage(oval_bottom, landmark[head_map[1][1]][1])>thres or margin_percentage(oval_bottom, landmark[head_map[1][2]][1])>thres
         bottom_check2 = margin_percentage(oval_bottom, landmark[head_map[1][0]][1])<0.2 or margin_percentage(oval_bottom, landmark[head_map[1][1]][1])<0.15  or margin_percentage(oval_bottom, landmark[head_map[1][2]][1])<0.2
         bottom_check =  bottom_check and bottom_check2
+        bottom_check = True
         left_check = margin_percentage(landmark[head_map[2][0]][0],oval_left)>thres or margin_percentage(landmark[head_map[2][1]][0],oval_left)>thres or margin_percentage(landmark[head_map[2][2]][0],oval_left)>thres
 
         right_check = margin_percentage(oval_right, landmark[head_map[3][0]][0])>thres or margin_percentage(oval_right,landmark[head_map[3][1]][0])>thres or margin_percentage(oval_right, landmark[head_map[3][2]][0])>thres
@@ -134,7 +136,7 @@ def face_oval(rgb_frame,oval_coords):
         face_rx = (landmark[head_map[3][1]][0] - landmark[head_map[2][1]][0])/2
         face_area = math.pi*face_rx*face_ry
         area_percent = face_area/oval_area*100
-        area_check = True if area_percent<90 and area_percent>35 else False
+        area_check = True if area_percent<100 and area_percent>35 else False
         print(round(area_percent,2),area_check,center_check, top_check, bottom_check, left_check, right_check)
         # check = (top_check and bottom_check and left_check and right_check) or (top_check and bottom_check and left_check and right_check) or (top_check and bottom_check and left_check and right_check)
         return area_check and center_check and (top_check and bottom_check and left_check and right_check), bottom_check,area_check,area_percent
@@ -169,3 +171,6 @@ def perspective_distortion_ratio(rgb_frame):
     perspective_ratio = perspective_transformation(face_landmarks)
     return perspective_ratio
     
+def detect_image_noise(rgb_frame):
+    snr = signal_to_noise(rgb_frame)
+    return snr

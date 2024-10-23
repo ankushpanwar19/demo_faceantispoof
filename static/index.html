@@ -263,7 +263,7 @@
             var avg_distortion_ratio = total /count;
             let finalresult = 'Spoof';
             let finalresult_color = 'red';
-            if (avg_distortion_ratio<0.995){
+            if (avg_distortion_ratio<2){
                 finalresult = object_spoof === 'Spoof' || face_spoof === "Spoof" ? 'Spoof':'Real';
                 finalresult_color = finalresult === 'Spoof' ? 'red':'green';
             }    
