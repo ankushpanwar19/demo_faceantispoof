@@ -222,7 +222,7 @@
                 ovalEllipse.style.stroke = 'white';
                 ovalEllipse.style.strokeWidth = 5;
             }
-            
+
                         
             overlay.innerHTML = text;
             if (response["final_object_spoof"] === 'Spoof' || response["final_object_spoof"] === 'Real') {
@@ -254,7 +254,8 @@
             console.log("Object Spoof Status: ",object_spoof);
             console.log("Face Spoof Status: ",face_spoof);
             total = 0.0
-            for(var i = 0; i < distortion_ratio.length; i++) {
+            var start = Math.max(0, distortion_ratio.length - 5);
+            for(var i = start; i < distortion_ratio.length; i++) {
                 total += distortion_ratio[i];
             }
             var avg_distortion_ratio = total / distortion_ratio.length;
