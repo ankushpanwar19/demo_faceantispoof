@@ -3,14 +3,30 @@ import numpy as np
 def euclidean_distance(pt1, pt2):
     return np.linalg.norm(np.array(pt1) - np.array(pt2))
 
-def perspective_transformation(landmarks):
-    left_eye = landmarks[263]
-    right_eye = landmarks[33]
-    nose_tip = landmarks[4]
-    eye_distance = euclidean_distance(left_eye, right_eye)
-    nose_to_eye_distance = euclidean_distance(nose_tip, ((left_eye[0] + right_eye[0]) // 2, (left_eye[1] + right_eye[1]) // 2))
+# def perspective_transformation(landmarks):
+#     left_eye = landmarks[263]
+#     right_eye = landmarks[33]
+#     nose_tip = landmarks[4]
+#     eye_distance = euclidean_distance(left_eye, right_eye)
+#     nose_to_eye_distance = euclidean_distance(nose_tip, ((left_eye[0] + right_eye[0]) // 2, (left_eye[1] + right_eye[1]) // 2))
 
-    ratio = round(eye_distance/nose_to_eye_distance,4)
+#     ratio = round(eye_distance/nose_to_eye_distance,4)
+
+#     return ratio
+
+def perspective_transformation(landmarks):
+
+
+    landmark = [(pt.x, pt.y, pt.z) for pt in landmarks.landmark]
+    left_eye = landmark[263]
+    right_eye = landmark[33]
+    left_ear = landmark[356]
+    right_ear = landmark[127]
+    print("left_ear",left_ear)
+    eye_distance = euclidean_distance(left_eye, right_eye)
+    ear_distance = euclidean_distance(left_ear, right_ear)
+
+    ratio = round(ear_distance/eye_distance,4)
 
     return ratio
 

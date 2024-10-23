@@ -166,6 +166,6 @@ def face_blur_check(rgb_frame, face_bbox):
 
 def perspective_distortion_ratio(rgb_frame):
     landmarks,face_landmarks = detect_landmarks(rgb_frame)
-    perspective_ratio = perspective_transformation(landmarks)
+    perspective_ratio = perspective_transformation(face_landmarks)
     return perspective_ratio
     
