@@ -255,10 +255,12 @@
             console.log("Face Spoof Status: ",face_spoof);
             total = 0.0
             var start = Math.max(0, distortion_ratio.length - 5);
+            var count = 0
             for(var i = start; i < distortion_ratio.length; i++) {
                 total += distortion_ratio[i];
+                count++;
             }
-            var avg_distortion_ratio = total / distortion_ratio.length;
+            var avg_distortion_ratio = total /count;
             let finalresult = 'Spoof';
             let finalresult_color = 'red';
             if (avg_distortion_ratio<0.995){
