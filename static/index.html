@@ -258,10 +258,12 @@
                 total += distortion_ratio[i];
             }
             var avg_distortion_ratio = total / distortion_ratio.length;
-            // let finalresult = 'Spoof';
-            let finalresult = object_spoof === 'Spoof' || face_spoof === "Spoof" ? 'Spoof':'Real';
-            let finalresult_color = finalresult === 'Spoof' ? 'red':'green';
-
+            let finalresult = 'Spoof';
+            let finalresult_color = 'red';
+            if (avg_distortion_ratio<0.995){
+                finalresult = object_spoof === 'Spoof' || face_spoof === "Spoof" ? 'Spoof':'Real';
+                finalresult_color = finalresult === 'Spoof' ? 'red':'green';
+            }    
             // result.innerHTML = `<div>Object Model: <span style="color:${object_spoof_color}">${object_spoof}</div>
             //                     <div> Face AntiSpoof: <span style="color:${face_spoof_color}">${face_spoof}</span></div>
             //                     <br><div style="font-style: italic;"> Final result: <span style="color:${finalresult_color}">${finalresult}</span></div>
